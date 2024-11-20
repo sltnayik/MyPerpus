@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import SplashScreen from './SplashScreen'; // Import SplashScreen
+import SplashScreen from './SplashScreen';
 import LoginScreen from './LoginScreen';
 import SignUpScreen from './SignupScreen';
 
@@ -14,7 +14,7 @@ export default function App() {
         <Stack.Screen 
           name="Splash" 
           component={SplashScreen} 
-          options={{ headerShown: false }} // Menyembunyikan header di SplashScreen
+          options={{ headerShown: false }}
         />
         <Stack.Screen 
           name="Login" 
