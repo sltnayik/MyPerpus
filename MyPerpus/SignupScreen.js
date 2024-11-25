@@ -16,11 +16,17 @@ const showAlert = (message) => {
   Alert.alert('Info', message);
 };
 
+const SignUpScreen = ({ navigation }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
 // Fungsi untuk menangani logika Sign Up
-const handleSignUpLogic = (username, password, confirmPassword) => {
+const handleSignUp = (username, password, confirmPassword) => {
   if (validateSignUpFields(username, password, confirmPassword)) {
     if (arePasswordsEqual(password, confirmPassword)) {
-      showAlert(`Selamat datang, ${username}!`);
+      showAlert(`Berhasil mendaftar, ${username}!`);
+      navigation.navigate('Login')
     } else {
       showAlert('Password dan Konfirmasi Password tidak sama!');
     }
@@ -28,11 +34,6 @@ const handleSignUpLogic = (username, password, confirmPassword) => {
     showAlert('Semua field harus diisi!');
   }
 };
-
-const SignUpScreen = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
   return (
     <View style={styles.container}>
@@ -61,7 +62,7 @@ const SignUpScreen = () => {
         onChangeText={setConfirmPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={() => handleSignUpLogic(username, password, confirmPassword)}>
+      <TouchableOpacity style={styles.button} onPress={() => handleSignUp(username, password, confirmPassword)}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
     </View>

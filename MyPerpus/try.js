@@ -1,2 +1,0 @@
-// code percobaan
-// code percobaan

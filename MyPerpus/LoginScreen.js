@@ -11,18 +11,19 @@ const showAlert = (message) => {
   Alert.alert('Info', message);
 };
 
+const LoginScreen = ({ navigation }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
 // Fungsi utama yang menangani login
-const handleLoginLogic = (username, password) => {
+const handleLogin = (username, password) => {
   if (validateFields(username, password)) {
     showAlert(`Selamat Datang, ${username}!`);
+    navigation.navigate('Home');
   } else {
     showAlert('Masukkan Username beserta Password');
   }
 };
-
-const LoginScreen = ({ navigation }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
 
   return (
     <View style={styles.container}>
@@ -43,7 +44,7 @@ const LoginScreen = ({ navigation }) => {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={() => handleLoginLogic(username, password)}>
+      <TouchableOpacity style={styles.button} onPress={() => handleLogin(username, password)}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 

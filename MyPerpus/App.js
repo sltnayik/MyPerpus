@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from './SplashScreen';
 import LoginScreen from './LoginScreen';
 import SignUpScreen from './SignupScreen';
+import HomeScreen from './HomeScreen';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +24,10 @@ export default function App() {
         <Stack.Screen 
           name="SignUp" 
           component={SignUpScreen} 
+        />
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
