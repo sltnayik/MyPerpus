@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
 // Fungsi validasi input yang lebih terpisah
-const validateFields = (username, password) => {
-  return username && password;
+const validateFields = (identifier, password, role) => {
+  return identifier && password && role;
 };
 
 // Fungsi untuk menampilkan alert secara terpisah
@@ -12,16 +12,20 @@ const showAlert = (message) => {
 };
 
 const LoginScreen = ({ navigation }) => {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('');
 
-// Fungsi utama yang menangani login
-const handleLogin = (username, password) => {
-  if (validateFields(username, password)) {
-    showAlert(`Selamat Datang, ${username}!`);
+  // Fungsi untuk menangani login
+const handleLogin = (identifier, password, role) => {
+  if (validateFields(identifier, password, role)) {
+    const isEmail = identifier.includes('@'); // Deteksi apakah input adalah email
+    const loginType = isEmail ? 'Email' : 'Username';
+
+    showAlert(`Login berhasil sebagai ${role} dengan ${loginType}: ${identifier}`);
     navigation.navigate('Home');
   } else {
-    showAlert('Masukkan Username beserta Password');
+    showAlert('Masukkan Email/Username, Password, dan pilih peran Anda.');
   }
 };
 
@@ -30,10 +34,10 @@ const handleLogin = (username, password) => {
       <Text style={styles.header}>MyPerpus</Text>
       
       <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+      style={styles.input}
+      placeholder="Email atau Username"
+      value={identifier}
+      onChangeText={setIdentifier}
       />
       
       <TextInput
@@ -44,7 +48,24 @@ const handleLogin = (username, password) => {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={() => handleLogin(username, password)}>
+      <View style={styles.roleContainer}>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setRole('admin')}
+        >
+          <View style={[styles.radioCircle, role === 'admin' && styles.radioSelected]} />
+          <Text style={styles.radioText}>Admin</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.radioButton}
+          onPress={() => setRole('customer')}
+        >
+          <View style={[styles.radioCircle, role === 'customer' && styles.radioSelected]} />
+          <Text style={styles.radioText}>Customer</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.button} onPress={() => handleLogin(identifier, password, role)}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
@@ -82,6 +103,37 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     marginBottom: 15,
     backgroundColor: '#fff',
+  },
+  roleContainer: {
+    flexDirection: 'row',
+    marginVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  radioCircle: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#2986cc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  radioSelected: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#2986cc',
+  },
+  radioText: {
+    fontSize: 16,
+    color: '#2986cc',
   },
   button: {
     width: '80%',

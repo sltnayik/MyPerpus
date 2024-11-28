@@ -1,45 +1,62 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, FlatList } from 'react-native';
 
 const HomeScreen = ({ navigation }) => {
+  // Dummy data untuk daftar buku
+  const books = [
+    { id: '1', title: 'Buku 1', author: 'Penulis 1' },
+    { id: '2', title: 'Buku 2', author: 'Penulis 2' },
+    { id: '3', title: 'Buku 3', author: 'Penulis 3' },
+    { id: '4', title: 'Buku 4', author: 'Penulis 4' },
+    { id: '5', title: 'Buku 5', author: 'Penulis 5' },
+    { id: '6', title: 'Buku 6', author: 'Penulis 6' },
+    { id: '7', title: 'Buku 7', author: 'Penulis 7' },
+    { id: '8', title: 'Buku 8', author: 'Penulis 8' },
+  ];
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Image 
           source={require('./assets/logo.png')} 
-          style={styles.logo}
+          style={styles.logo} 
         />
-        <Text style={styles.title}>MyPerpus</Text>
+        <Text style={styles.headerText}>MyPerpus</Text>
       </View>
 
-      {/* Main Menu */}
-      <View style={styles.menu}>
-        <TouchableOpacity 
-          style={styles.menuButton} 
-          onPress={() => navigation.navigate('SearchBooks')}
-        >
-          <Text style={styles.menuText}>Cari Buku</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.menuButton} 
-          onPress={() => navigation.navigate('MyLoans')}
-        >
-          <Text style={styles.menuText}>Pinjaman Saya</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.menuButton} 
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Text style={styles.menuText}>Profil</Text>
-        </TouchableOpacity>
+      {/* Pencarian */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          placeholder="Cari buku..."
+          style={styles.searchInput}
+        />
+      </View>
+
+      {/* Daftar Buku */}
+      <View style={styles.bookListContainer}>
+        <FlatList
+          data={books}
+          numColumns={2}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.bookItem}>
+              <View style={styles.bookCover} />
+              <Text style={styles.bookTitle}>{item.title}</Text>
+              <Text style={styles.bookAuthor}>{item.author}</Text>
+            </View>
+          )}
+        />
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2024 MyPerpus. All Rights Reserved.</Text>
+        <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('MyLoans')}>
+          <Text style={styles.footerText}>Pinjaman Saya</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('Profile')}>
+          <Text style={styles.footerText}>Profil</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -51,65 +68,79 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    flex: 1,
-    maxHeight: 80,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2986cc',
-    paddingHorizontal: 20,
+    padding: 15,
   },
   logo: {
-    width: 70,
-    height: 70,
-    marginRight: 15,
+    width: 40,
+    height: 40,
+    marginRight: 10,
   },
-  title: {
+  headerText: {
+    fontSize: 20,
     color: '#fff',
-    fontSize: 26,
     fontWeight: 'bold',
+  },
+  searchContainer: {
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    height: 40,
+    fontSize: 16,
+  },
+  bookListContainer: {
     flex: 1,
+    padding: 10,
   },
-  menu: {
-    flex: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
+  bookItem: {
+    flex: 1,
+    margin: 10,
+    backgroundColor: '#fff',
     borderRadius: 10,
-    marginTop: 20,
-  },
-  menuButton: {
-    backgroundColor: '#2986cc',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 25,
-    marginVertical: 12,
-    width: '80%',
     alignItems: 'center',
+    padding: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.5,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 5,
-    transform: [{ scale: 1 }],
-    transition: 'transform 0.3s ease',
   },
-  menuButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  bookCover: {
+    width: 80,
+    height: 120,
+    backgroundColor: '#ddd',
+    borderRadius: 5,
+    marginBottom: 10,
   },
-  menuText: {
-    color: '#fff',
-    fontSize: 18,
+  bookTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#333',
+  },
+  bookAuthor: {
+    fontSize: 14,
+    color: '#666',
   },
   footer: {
-    padding: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2986cc',
+    paddingVertical: 15,
+  },
+  footerButton: {
     alignItems: 'center',
-    backgroundColor: '#eee',
   },
   footerText: {
-    color: '#333',
-    fontSize: 14,
+    color: '#fff',
+    fontSize: 16,
   },
 });
 
