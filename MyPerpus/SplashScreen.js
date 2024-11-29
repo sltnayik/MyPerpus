@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 
-// Fungsi untuk menangani navigasi setelah 3 detik
 const navigateAfterDelay = (navigation, delay = 3000) => {
   setTimeout(() => {
     navigation.replace('Login');

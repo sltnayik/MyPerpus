@@ -1,61 +1,109 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
-const HomeScreen = ({ navigation }) => {
-  // Dummy data untuk daftar buku
+// Fungsi Pure untuk Render Buku
+const renderBookItem = ({ item }) => (
+  <View style={styles.bookItem}>
+    <Image source={{ uri: item.image }} style={styles.bookImage} />
+    <View style={styles.bookInfo}>
+      <Text style={styles.bookTitle}>Judul: {item.title}</Text>
+      <Text style={styles.bookAuthor}>Penulis: {item.author}</Text>
+      <Text style={styles.bookStatus}>Status: {item.status}</Text>
+    </View>
+  </View>
+);
+
+// Fungsi Pure untuk Filter Buku
+const filterBooks = (books, query) => {
+  if (!query) return books; // Jika query kosong, kembalikan semua buku
+  return books.filter((book) =>
+    book.title.toLowerCase().includes(query.toLowerCase()) ||
+    book.author.toLowerCase().includes(query.toLowerCase()) ||
+    book.status.toLowerCase().includes(query.toLowerCase())
+  );
+};
+
+const HomeScreen = () => {
+  const [searchQuery, setSearchQuery] = useState('');
   const books = [
-    { id: '1', title: 'Buku 1', author: 'Penulis 1' },
-    { id: '2', title: 'Buku 2', author: 'Penulis 2' },
-    { id: '3', title: 'Buku 3', author: 'Penulis 3' },
-    { id: '4', title: 'Buku 4', author: 'Penulis 4' },
-    { id: '5', title: 'Buku 5', author: 'Penulis 5' },
-    { id: '6', title: 'Buku 6', author: 'Penulis 6' },
-    { id: '7', title: 'Buku 7', author: 'Penulis 7' },
-    { id: '8', title: 'Buku 8', author: 'Penulis 8' },
+    {
+      id: '1',
+      title: 'Buku A',
+      author: 'Penulis A',
+      status: 'Tersedia',
+      image: 'https://via.placeholder.com/100',
+    },
+    {
+      id: '2',
+      title: 'Buku B',
+      author: 'Penulis B',
+      status: 'Dipinjam',
+      image: 'https://via.placeholder.com/100',
+    },
+    {
+      id: '3',
+      title: 'Buku C',
+      author: 'Penulis C',
+      status: 'Tersedia',
+      image: 'https://via.placeholder.com/100',
+    },
+    {
+      id: '4',
+      title: 'Buku D',
+      author: 'Penulis D',
+      status: 'Tersedia',
+      image: 'https://via.placeholder.com/100',
+    },
+    {
+      id: '5',
+      title: 'Buku E',
+      author: 'Penulis E',
+      status: 'Tersedia',
+      image: 'https://via.placeholder.com/100',
+    },
   ];
+
+  // Data yang difilter berdasarkan query
+  const filteredBooks = filterBooks(books, searchQuery);
 
   return (
     <View style={styles.container}>
+
       {/* Header */}
       <View style={styles.header}>
-        <Image 
-          source={require('./assets/logo.png')} 
-          style={styles.logo} 
+        <Image
+          source={require('./assets/logo.png')}
+          style={styles.logo}
         />
         <Text style={styles.headerText}>MyPerpus</Text>
       </View>
 
-      {/* Pencarian */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Cari buku..."
-          style={styles.searchInput}
-        />
-      </View>
+      {/* Search Bar */}
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Cari buku"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
-      {/* Daftar Buku */}
-      <View style={styles.bookListContainer}>
-        <FlatList
-          data={books}
-          numColumns={2}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.bookItem}>
-              <View style={styles.bookCover} />
-              <Text style={styles.bookTitle}>{item.title}</Text>
-              <Text style={styles.bookAuthor}>{item.author}</Text>
-            </View>
-          )}
-        />
-      </View>
+      {/* List Buku */}
+      <FlatList
+        data={filteredBooks}
+        renderItem={renderBookItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.bookList}
+      />
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('MyLoans')}>
-          <Text style={styles.footerText}>Pinjaman Saya</Text>
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNavigation}>
+        <TouchableOpacity style={styles.navButton}>
+          <Text style={styles.navButtonText}>Pinjaman</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('Profile')}>
-          <Text style={styles.footerText}>Profil</Text>
+        <TouchableOpacity style={styles.navButton}>
+          <Text style={styles.navButtonText}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
+          <Text style={styles.navButtonText}>Profil</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -65,82 +113,84 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f2f2f2',
   },
   header: {
+    height: 80,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'start',
     backgroundColor: '#2986cc',
-    padding: 15,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    margin: 10
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 80,
+    height: 80,
     marginRight: 10,
   },
   headerText: {
-    fontSize: 20,
-    color: '#fff',
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#fff',
   },
-  searchContainer: {
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-  },
-  searchInput: {
+  searchBar: {
+    height: 50,
+    margin: 10,
+    borderColor: '#2986cc',
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    height: 40,
-    fontSize: 16,
+    borderRadius: 25,
+    paddingLeft: 15,
+    backgroundColor: '#fff',
   },
-  bookListContainer: {
-    flex: 1,
+  bookList: {
     padding: 10,
   },
   bookItem: {
-    flex: 1,
-    margin: 10,
+    flexDirection: 'row',
+    marginBottom: 15,
     backgroundColor: '#fff',
-    borderRadius: 10,
-    alignItems: 'center',
     padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    borderRadius: 10,
+    elevation: 2,
   },
-  bookCover: {
-    width: 80,
-    height: 120,
-    backgroundColor: '#ddd',
-    borderRadius: 5,
-    marginBottom: 10,
+  bookImage: {
+    width: 60,
+    height: 80,
+    marginRight: 15,
+  },
+  bookInfo: {
+    flex: 1,
   },
   bookTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    marginBottom: 5,
   },
   bookAuthor: {
     fontSize: 14,
-    color: '#666',
+    marginBottom: 5,
   },
-  footer: {
+  bookStatus: {
+    fontSize: 14,
+    color: '#2986cc',
+  },
+  bottomNavigation: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#2986cc',
-    paddingVertical: 15,
+    alignItems: 'center',
+    height: 60,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
   },
-  footerButton: {
+  navButton: {
     alignItems: 'center',
   },
-  footerText: {
-    color: '#fff',
-    fontSize: 16,
+  navButtonText: {
+    fontSize: 14,
+    color: '#2986cc',
   },
 });
 

@@ -17,8 +17,8 @@ const showAlert = (message) => {
 };
 
 const SignUpScreen = ({ navigation }) => {
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('');
@@ -40,20 +40,20 @@ const handleSignUp = (username, email, password, confirmPassword, role) => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Daftar MyPerpus</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-      />
-
+      
       <TextInput
         style={styles.input}
         placeholder="Email"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
       />
 
       <TextInput
