@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './FirebaseConfig';
 
 // Fungsi validasi input untuk sign up
 const validateSignUpFields = (username, email, password, confirmPassword, role) => {
@@ -12,8 +14,8 @@ const arePasswordsEqual = (password, confirmPassword) => {
 };
 
 // Fungsi untuk menampilkan alert
-const showAlert = (message) => {
-  Alert.alert('Info', message);
+const showAlert = (title, message) => {
+  Alert.alert(title, message);
 };
 
 const SignUpScreen = ({ navigation }) => {
@@ -23,24 +25,35 @@ const SignUpScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('');
 
-// Fungsi untuk menangani logika Sign Up
-const handleSignUp = (username, email, password, confirmPassword, role) => {
-  if (validateSignUpFields(username, email, password, confirmPassword, role)) {
-    if (arePasswordsEqual(password, confirmPassword)) {
-      showAlert(`Berhasil mendaftar sebagai ${role}, ${username}!`);
-      navigation.navigate('Login');
-    } else {
-      showAlert('Password dan Konfirmasi Password tidak sama!');
+  // Fungsi untuk menangani logika Sign Up
+  const handleSignUp = async () => {
+    if (!validateSignUpFields(username, email, password, confirmPassword, role)) {
+      showAlert('Error', 'Semua field harus diisi!');
+      return;
     }
-    } else {
-      showAlert('Semua field harus diisi!');
+
+    if (!arePasswordsEqual(password, confirmPassword)) {
+      showAlert('Error', 'Password dan Konfirmasi Password tidak sama!');
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      showAlert('Berhasil', `Berhasil mendaftar sebagai ${role}, ${username}!`);
+      console.log('User created:', user);
+
+      navigation.navigate('Login');
+    } catch (error) {
+      showAlert('Error', error.message);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Daftar MyPerpus</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -91,7 +104,7 @@ const handleSignUp = (username, email, password, confirmPassword, role) => {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => handleSignUp(username, email, password, confirmPassword, role)}
+        onPress={handleSignUp}
       >
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>

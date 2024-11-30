@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './FirebaseConfig';
 
-// Fungsi validasi input yang lebih terpisah
+// Fungsi validasi input
 const validateFields = (identifier, password, role) => {
   return identifier && password && role;
 };
 
-// Fungsi untuk menampilkan alert secara terpisah
+// Fungsi untuk menampilkan alert
 const showAlert = (message) => {
   Alert.alert('Info', message);
 };
@@ -17,27 +19,40 @@ const LoginScreen = ({ navigation }) => {
   const [role, setRole] = useState('');
 
   // Fungsi untuk menangani login
-const handleLogin = (identifier, password, role) => {
-  if (validateFields(identifier, password, role)) {
-    const isEmail = identifier.includes('@'); // Deteksi apakah input adalah email
-    const loginType = isEmail ? 'Email' : 'Username';
+  const handleLogin = async (identifier, password, role) => {
+    if (validateFields(identifier, password, role)) {
+      try {
+        const isEmail = identifier.includes('@');
+        if (!isEmail) {
+          showAlert('Hanya login menggunakan email yang diizinkan!');
+          return;
+        }
 
-    showAlert(`Login berhasil sebagai ${role} dengan ${loginType}: ${identifier}`);
-    navigation.navigate('Home');
-  } else {
-    showAlert('Masukkan Email/Username, Password, dan pilih peran Anda.');
-  }
-};
+        // Firebase Authentication
+        const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
+        const user = userCredential.user;
+
+        // Berhasil login
+        showAlert(`Login berhasil sebagai ${role} dengan Email: ${user.email}`);
+        navigation.navigate('Home');
+      } catch (error) {
+        showAlert(error.message || 'Terjadi kesalahan saat login.');
+      }
+    } else {
+      showAlert('Masukkan Email, Password, dan pilih peran Anda.');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>MyPerpus</Text>
       
       <TextInput
-      style={styles.input}
-      placeholder="Email atau Username"
-      value={identifier}
-      onChangeText={setIdentifier}
+        style={styles.input}
+        placeholder="Email"
+        keyboardType="email-address"
+        value={identifier}
+        onChangeText={setIdentifier}
       />
       
       <TextInput
@@ -70,10 +85,11 @@ const handleLogin = (identifier, password, role) => {
       </TouchableOpacity>
 
       <Text style={styles.footer}>
-        Don't have an account? 
+        Don't have an account?{' '}
         <Text 
           style={styles.signUpText} 
-          onPress={() => navigation.navigate('SignUp')}>
+          onPress={() => navigation.navigate('SignUp')}
+        >
           Sign Up
         </Text>
       </Text>
