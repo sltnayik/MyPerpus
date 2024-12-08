@@ -5,6 +5,8 @@ import SplashScreen from './SplashScreen';
 import LoginScreen from './LoginScreen';
 import SignUpScreen from './SignupScreen';
 import HomeScreen from './HomeScreen';
+import ProfileScreen from './ProfileScreen';
+import PinjamanScreen from './PinjamanScreen';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +30,14 @@ export default function App() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
+        />
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+        />
+        <Stack.Screen
+          name="Pinjaman"
+          component={PinjamanScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

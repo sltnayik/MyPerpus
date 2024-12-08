@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import Footer from './Footer';
 
 // Fungsi Pure untuk Render Buku
 const renderBookItem = ({ item }) => (
@@ -23,7 +24,7 @@ const filterBooks = (books, query) => {
   );
 };
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const books = [
     {
@@ -94,18 +95,8 @@ const HomeScreen = () => {
         contentContainerStyle={styles.bookList}
       />
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNavigation}>
-        <TouchableOpacity style={styles.navButton}>
-          <Text style={styles.navButtonText}>Pinjaman</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Text style={styles.navButtonText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Text style={styles.navButtonText}>Profil</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Footer */}
+      <Footer navigation={navigation} currentScreen="Home" />
     </View>
   );
 };
@@ -114,6 +105,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f2f2f2',
+    paddingBottom: 60,
   },
   header: {
     height: 80,
@@ -176,22 +168,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bookStatus: {
-    fontSize: 14,
-    color: '#2986cc',
-  },
-  bottomNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    height: 60,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-  navButton: {
-    alignItems: 'center',
-  },
-  navButtonText: {
     fontSize: 14,
     color: '#2986cc',
   },
