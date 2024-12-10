@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
+import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import Footer from './Footer'; // Import Footer
 
 // Fungsi untuk membuat item buku
 const BookItem = ({ book }) => (
   <View style={styles.bookItem}>
-    <Image source={{ uri: book.cover }} style={styles.bookCover} />
+    <Image source={{ uri: book.cover || 'https://via.placeholder.com/100' }} style={styles.bookCover} />
     <View style={styles.bookInfo}>
-      <Text style={styles.bookTitle}>{book.title}</Text>
-      <Text style={styles.bookAuthor}>{book.author}</Text>
+      <Text style={styles.bookTitle}>{book.judul}</Text>
+      <Text style={styles.bookAuthor}>{book.pengarang}</Text>
     </View>
   </View>
 );
@@ -25,12 +27,52 @@ const BookList = ({ books }) => (
 
 // Komponen utama PinjamanScreen
 const PinjamanScreen = ({ navigation }) => {
-  // Data buku pinjaman (contoh statis)
-  const borrowedBooks = [
-    { id: '1', title: 'Belajar React Native', author: 'John Doe', cover: 'https://via.placeholder.com/100' },
-    { id: '2', title: 'Pengantar Firebase', author: 'Jane Doe', cover: 'https://via.placeholder.com/100' },
-    { id: '3', title: 'Desain UI/UX', author: 'Alex Smith', cover: 'https://via.placeholder.com/100' },
-  ];
+  const [borrowedByUser, setBorrowedByUser] = useState([]);
+  const [borrowedByOthers, setBorrowedByOthers] = useState([]);
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    if (!user) return;
+
+    const db = getFirestore();
+    const booksCollection = collection(db, 'buku');
+
+    // Query buku yang dipinjam oleh user saat ini
+    const userBooksQuery = query(
+      booksCollection,
+      where('status', '==', false), // Buku dipinjam
+      where('uid', '==', user.uid) // Oleh user yang login
+    );
+
+    // Query buku yang dipinjam oleh user lain
+    const otherBooksQuery = query(
+      booksCollection,
+      where('status', '==', false), // Buku dipinjam
+      where('uid', '!=', user.uid) // Oleh user lain
+    );
+
+    const unsubscribeUserBooks = onSnapshot(userBooksQuery, (snapshot) => {
+      const fetchedBooks = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setBorrowedByUser(fetchedBooks);
+    });
+
+    const unsubscribeOtherBooks = onSnapshot(otherBooksQuery, (snapshot) => {
+      const fetchedBooks = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setBorrowedByOthers(fetchedBooks);
+    });
+
+    return () => {
+      unsubscribeUserBooks();
+      unsubscribeOtherBooks();
+    };
+  }, [user]);
 
   return (
     <View style={styles.container}>
@@ -41,10 +83,11 @@ const PinjamanScreen = ({ navigation }) => {
       </View>
 
       {/* Header Keterangan */}
-      <Text style={styles.keteranganText}>Pinjaman</Text>
+      <Text style={styles.keteranganText}>Pinjaman anda</Text>
+      <BookList books={borrowedByUser} />
 
-      {/* Daftar Buku */}
-      <BookList books={borrowedBooks} />
+      <Text style={styles.keteranganText}>Buku dalam pinjaman</Text>
+      <BookList books={borrowedByOthers} />
 
       {/* Footer */}
       <Footer navigation={navigation} currentScreen="Pinjaman" />

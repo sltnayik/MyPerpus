@@ -1,79 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { getFirestore, collection, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import Footer from './Footer';
 
-// Fungsi Pure untuk Render Buku
-const renderBookItem = ({ item }) => (
+// Komponen untuk Render Buku
+const BookItem = ({ item, onPinjamPress }) => (
   <View style={styles.bookItem}>
-    <Image source={{ uri: item.image }} style={styles.bookImage} />
+    <Image
+      source={{ uri: item.image || 'https://via.placeholder.com/100' }}
+      style={styles.bookImage}
+    />
     <View style={styles.bookInfo}>
-      <Text style={styles.bookTitle}>Judul: {item.title}</Text>
-      <Text style={styles.bookAuthor}>Penulis: {item.author}</Text>
-      <Text style={styles.bookStatus}>Status: {item.status}</Text>
+      <Text style={styles.bookTitle}>Judul: {item.judul}</Text>
+      <Text style={styles.bookAuthor}>Penulis: {item.pengarang}</Text>
+      <Text style={styles.bookStatus}>
+        Status: {item.status ? 'Tersedia' : 'Dipinjam'}
+      </Text>
+
+      {/* Tombol Pinjam */}
+      {item.status && (
+        <TouchableOpacity style={styles.pinjamButton} onPress={() => onPinjamPress(item.id)}>
+          <Text style={{ color: 'white' }}>Pinjam</Text>
+        </TouchableOpacity>
+      )}
     </View>
   </View>
 );
 
-// Fungsi Pure untuk Filter Buku
+// Fungsi untuk Filter Buku
 const filterBooks = (books, query) => {
   if (!query) return books; // Jika query kosong, kembalikan semua buku
-  return books.filter((book) =>
-    book.title.toLowerCase().includes(query.toLowerCase()) ||
-    book.author.toLowerCase().includes(query.toLowerCase()) ||
-    book.status.toLowerCase().includes(query.toLowerCase())
-  );
+  return books.filter((book) => {
+    const title = book.judul ? book.judul.toLowerCase() : '';
+    const author = book.pengarang ? book.pengarang.toLowerCase() : '';
+    const status = book.status ? book.status.toLowerCase() : '';
+    return (
+      title.includes(query.toLowerCase()) ||
+      author.includes(query.toLowerCase()) ||
+      status.includes(query.toLowerCase())
+    );
+  });
 };
 
 const HomeScreen = ({ navigation }) => {
+  const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const auth = getAuth(); // Mengambil instance auth Firebase
+  const db = getFirestore(); // Mengambil instance Firestore
+  const filteredBooks = filterBooks(books, searchQuery);
 
-  // Data buku statis
-  // Penggunaan React.useMemo
-  // books didefinisikan sebagai state statis dengan React.useMemo. Ini memastikan bahwa data buku tidak diinisialisasi ulang setiap kali komponen dirender.
-  // filteredBooks dihitung ulang hanya ketika books atau searchQuery berubah, yang meningkatkan performa.
-  const books = React.useMemo(
-    () => [
-      {
-        id: '1',
-        title: 'Buku A',
-        author: 'Penulis A',
-        status: 'Tersedia',
-        image: 'https://via.placeholder.com/100',
-      },
-      {
-        id: '2',
-        title: 'Buku B',
-        author: 'Penulis B',
-        status: 'Dipinjam',
-        image: 'https://via.placeholder.com/100',
-      },
-      {
-        id: '3',
-        title: 'Buku C',
-        author: 'Penulis C',
-        status: 'Tersedia',
-        image: 'https://via.placeholder.com/100',
-      },
-      {
-        id: '4',
-        title: 'Buku D',
-        author: 'Penulis D',
-        status: 'Tersedia',
-        image: 'https://via.placeholder.com/100',
-      },
-      {
-        id: '5',
-        title: 'Buku E',
-        author: 'Penulis E',
-        status: 'Tersedia',
-        image: 'https://via.placeholder.com/100',
-      },
-    ],
-    []
-  );
+  // Mengambil Data Buku dari Firestore secara Real-time
+  useEffect(() => {
+    const booksCollection = collection(db, 'buku');
+    const unsubscribe = onSnapshot(booksCollection, (snapshot) => {
+      const fetchedBooks = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setBooks(fetchedBooks);
+    });
 
-  // Buku yang difilter berdasarkan query
-  const filteredBooks = React.useMemo(() => filterBooks(books, searchQuery), [books, searchQuery]);
+    // Membersihkan listener saat komponen di-unmount
+    return () => unsubscribe();
+  }, []);
+
+  // Fungsi untuk meminjam buku
+  const handlePinjam = async (bookId) => {
+    try {
+      const user = auth.currentUser;
+
+      if (user) {
+        const bookRef = doc(db, 'buku', bookId);
+        await updateDoc(bookRef, {
+          status: false,
+          uid: user.uid,  // Menyimpan ID user yang meminjam buku
+        });
+
+        console.log('Buku berhasil dipinjam!');
+      } else {
+        console.log('Pengguna tidak login. Harap login terlebih dahulu.');
+        navigation.navigate('Login'); // Mengarahkan ke halaman login
+      }
+    } catch (error) {
+      console.error('Gagal meminjam buku:', error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -91,10 +103,12 @@ const HomeScreen = ({ navigation }) => {
         onChangeText={setSearchQuery}
       />
 
-      {/* List Buku */}
+      {/* Daftar Buku */}
       <FlatList
         data={filteredBooks}
-        renderItem={renderBookItem}
+        renderItem={({ item }) => (
+          <BookItem item={item} onPinjamPress={handlePinjam} />
+        )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.bookList}
       />
@@ -115,7 +129,6 @@ const styles = StyleSheet.create({
     height: 80,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'start',
     backgroundColor: '#2986cc',
     paddingHorizontal: 15,
     borderRadius: 20,
@@ -163,6 +176,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 3,
+  },
+  pinjamButton: {
+    backgroundColor: 'green',
+    padding: 10,
+    marginVertical: 10,
+    alignItems: 'center',
+    borderRadius: 5,
+  },
+  bookStatus: {
+    color: 'green',
   },
   bookImage: {
     width: 60,

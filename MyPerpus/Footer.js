@@ -6,6 +6,14 @@ const Footer = ({ navigation, currentScreen }) => {
     <View style={styles.footerContainer}>
       <TouchableOpacity
         style={styles.navButton}
+        onPress={() => navigation.navigate('ManageBooks')}
+      >
+        <Text style={[styles.navButtonText, currentScreen === 'ManageBooks' && styles.activeNavButton]}>
+          Kelola Buku
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.navButton}
         onPress={() => navigation.navigate('Pinjaman')}
       >
         <Text style={[styles.navButtonText, currentScreen === 'Pinjaman' && styles.activeNavButton]}>

@@ -7,6 +7,7 @@ import SignUpScreen from './SignupScreen';
 import HomeScreen from './HomeScreen';
 import ProfileScreen from './ProfileScreen';
 import PinjamanScreen from './PinjamanScreen';
+import ManageBooksScreen from './ManageBookScreen';
 
 const Stack = createStackNavigator();
 
@@ -38,6 +39,10 @@ export default function App() {
         <Stack.Screen
           name="Pinjaman"
           component={PinjamanScreen}
+        />
+        <Stack.Screen
+          name="ManageBooks"
+          component={ManageBooksScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
