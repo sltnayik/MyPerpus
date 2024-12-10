@@ -3,50 +3,78 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './FirebaseConfig';
 
-// Fungsi validasi input
+// Pure function untuk validasi input
+// hanya menerima parameter dan mengembalikan output tanpa efek samping.
 const validateFields = (identifier, password, role) => {
   return identifier && password && role;
 };
 
-// Fungsi untuk menampilkan alert
-const showAlert = (message) => {
-  Alert.alert('Info', message);
+// Pure function untuk membuat pesan alert
+const createAlertMessage = (type, identifier, role) => {
+  if (type === 'success') {
+    return `Login berhasil sebagai ${role} dengan Email: ${identifier}`;
+  }
+  if (type === 'error') {
+    return `Terjadi kesalahan, mohon periksa kembali email dan password Anda.`;
+  }
+  if (type === 'missing') {
+    return 'Masukkan Email, Password, dan pilih peran Anda.';
+  }
+  if (type === 'invalidEmail') {
+    return 'Hanya login menggunakan email yang diizinkan!';
+  }
+  return 'Terjadi kesalahan.';
 };
+
+// Fungsi untuk menampilkan alert
+const showAlert = (message) => Alert.alert('Info', message);
 
 const LoginScreen = ({ navigation }) => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
+  // Penjelasan
+  // variabel dalam fungsi LoginScreen seperti identifier, password, dan role memang dipakai sebagai parameter untuk fungsi validateFields.
+  // Namun, ini tidak melanggar konsep Pure Function, karena variabel-variabel tersebut diberikan sebagai parameter ke fungsi tanpa mengakses langsung variabel di luar ruang lingkup fungsi.
+  // Pure Function tidak peduli dari mana parameter berasal. Yang penting adalah bahwa fungsi hanya bergantung pada nilai yang diterima sebagai parameter dan tidak mengakses variabel di luar ruang lingkupnya.
 
-  // Fungsi untuk menangani login
-  const handleLogin = async (identifier, password, role) => {
-    if (validateFields(identifier, password, role)) {
-      try {
-        const isEmail = identifier.includes('@');
-        if (!isEmail) {
-          showAlert('Hanya login menggunakan email yang diizinkan!');
-          return;
-        }
+  // Fungsi login
+  const handleLogin = async () => {
+    // Validasi input
+    if (!validateFields(identifier, password, role)) {
+      const alertMessage = createAlertMessage('missing');
+      showAlert(alertMessage);
+      return;
+    }
 
-        // Firebase Authentication
-        const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
-        const user = userCredential.user;
+    // Periksa apakah input berupa email
+    if (!identifier.includes('@')) {
+      const alertMessage = createAlertMessage('invalidEmail');
+      showAlert(alertMessage);
+      return;
+    }
 
-        // Berhasil login
-        showAlert(`Login berhasil sebagai ${role} dengan Email: ${user.email}`);
-        navigation.navigate('Home');
-      } catch (error) {
-        showAlert(error.message || 'Terjadi kesalahan saat login.');
-      }
-    } else {
-      showAlert('Masukkan Email, Password, dan pilih peran Anda.');
+    try {
+      // Firebase Authentication
+      const userCredential = await signInWithEmailAndPassword(auth, identifier, password);
+      const user = userCredential.user;
+
+      // Buat pesan berhasil
+      const alertMessage = createAlertMessage('success', user.email, role);
+      showAlert(alertMessage);
+
+      // Navigasi ke halaman berikutnya
+      navigation.navigate('Home');
+    } catch (error) {
+      const alertMessage = createAlertMessage('error');
+      showAlert(alertMessage);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>MyPerpus</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -54,7 +82,7 @@ const LoginScreen = ({ navigation }) => {
         value={identifier}
         onChangeText={setIdentifier}
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -66,30 +94,33 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.roleContainer}>
         <TouchableOpacity
           style={styles.radioButton}
-          onPress={() => setRole('admin')}
+          onPress={() => {
+            const newRole = 'admin'; // Immutability: membuat nilai baru
+            setRole(newRole);
+          }}
         >
           <View style={[styles.radioCircle, role === 'admin' && styles.radioSelected]} />
           <Text style={styles.radioText}>Admin</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.radioButton}
-          onPress={() => setRole('customer')}
+          onPress={() => {
+            const newRole = 'customer'; // Immutability: membuat nilai baru
+            setRole(newRole);
+          }}
         >
           <View style={[styles.radioCircle, role === 'customer' && styles.radioSelected]} />
           <Text style={styles.radioText}>Customer</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => handleLogin(identifier, password, role)}>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
       <Text style={styles.footer}>
         Don't have an account?{' '}
-        <Text 
-          style={styles.signUpText} 
-          onPress={() => navigation.navigate('SignUp')}
-        >
+        <Text style={styles.signUpText} onPress={() => navigation.navigate('SignUp')}>
           Sign Up
         </Text>
       </Text>
@@ -102,29 +133,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#eaf4fc',
+    paddingHorizontal: 20,
   },
   header: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#2986cc',
     marginBottom: 40,
   },
   input: {
-    width: '80%',
+    width: '90%',
     height: 50,
-    borderColor: '#2986cc',
-    borderWidth: 2,
+    borderColor: '#ccc',
+    borderWidth: 1.5,
     borderRadius: 10,
     paddingLeft: 15,
-    marginBottom: 15,
+    marginVertical: 10,
     backgroundColor: '#fff',
+    shadowColor: '#ccc',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    elevation: 3,
   },
   roleContainer: {
     flexDirection: 'row',
-    marginVertical: 20,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 20,
   },
   radioButton: {
     flexDirection: 'row',
@@ -137,41 +173,41 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#2986cc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 5,
   },
   radioSelected: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
     backgroundColor: '#2986cc',
   },
   radioText: {
-    fontSize: 16,
-    color: '#2986cc',
+    fontSize: 18,
+    color: '#333',
   },
   button: {
-    width: '80%',
+    width: '90%',
     height: 50,
     backgroundColor: '#2986cc',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 12,
+    marginVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    elevation: 5,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   footer: {
-    marginTop: 20,
-    color: '#2986cc',
     fontSize: 16,
+    color: '#2986cc',
+    marginTop: 20,
   },
   signUpText: {
-    color: '#2986cc',
     fontWeight: 'bold',
+    color: '#2986cc',
   },
 });
 

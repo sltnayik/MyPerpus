@@ -26,56 +26,60 @@ const filterBooks = (books, query) => {
 
 const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const books = [
-    {
-      id: '1',
-      title: 'Buku A',
-      author: 'Penulis A',
-      status: 'Tersedia',
-      image: 'https://via.placeholder.com/100',
-    },
-    {
-      id: '2',
-      title: 'Buku B',
-      author: 'Penulis B',
-      status: 'Dipinjam',
-      image: 'https://via.placeholder.com/100',
-    },
-    {
-      id: '3',
-      title: 'Buku C',
-      author: 'Penulis C',
-      status: 'Tersedia',
-      image: 'https://via.placeholder.com/100',
-    },
-    {
-      id: '4',
-      title: 'Buku D',
-      author: 'Penulis D',
-      status: 'Tersedia',
-      image: 'https://via.placeholder.com/100',
-    },
-    {
-      id: '5',
-      title: 'Buku E',
-      author: 'Penulis E',
-      status: 'Tersedia',
-      image: 'https://via.placeholder.com/100',
-    },
-  ];
 
-  // Data yang difilter berdasarkan query
-  const filteredBooks = filterBooks(books, searchQuery);
+  // Data buku statis
+  // Penggunaan React.useMemo
+  // books didefinisikan sebagai state statis dengan React.useMemo. Ini memastikan bahwa data buku tidak diinisialisasi ulang setiap kali komponen dirender.
+  // filteredBooks dihitung ulang hanya ketika books atau searchQuery berubah, yang meningkatkan performa.
+  const books = React.useMemo(
+    () => [
+      {
+        id: '1',
+        title: 'Buku A',
+        author: 'Penulis A',
+        status: 'Tersedia',
+        image: 'https://via.placeholder.com/100',
+      },
+      {
+        id: '2',
+        title: 'Buku B',
+        author: 'Penulis B',
+        status: 'Dipinjam',
+        image: 'https://via.placeholder.com/100',
+      },
+      {
+        id: '3',
+        title: 'Buku C',
+        author: 'Penulis C',
+        status: 'Tersedia',
+        image: 'https://via.placeholder.com/100',
+      },
+      {
+        id: '4',
+        title: 'Buku D',
+        author: 'Penulis D',
+        status: 'Tersedia',
+        image: 'https://via.placeholder.com/100',
+      },
+      {
+        id: '5',
+        title: 'Buku E',
+        author: 'Penulis E',
+        status: 'Tersedia',
+        image: 'https://via.placeholder.com/100',
+      },
+    ],
+    []
+  );
+
+  // Buku yang difilter berdasarkan query
+  const filteredBooks = React.useMemo(() => filterBooks(books, searchQuery), [books, searchQuery]);
 
   return (
     <View style={styles.container}>
-
       {/* Header */}
       <View style={styles.header}>
-        <Image
-          source={require('./assets/logo.png')}
-          style={styles.logo}
-        />
+        <Image source={require('./assets/logo.png')} style={styles.logo} />
         <Text style={styles.headerText}>MyPerpus</Text>
       </View>
 
@@ -104,7 +108,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#eaf4fc',
     paddingBottom: 60,
   },
   header: {
@@ -113,13 +117,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'start',
     backgroundColor: '#2986cc',
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
     borderRadius: 20,
-    margin: 10
+    margin: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
   },
   logo: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     marginRight: 10,
   },
   headerText: {
@@ -128,31 +137,37 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   searchBar: {
-    height: 40,
-    marginTop: 5,
-    marginBottom: 5,
-    marginRight: 25,
-    marginLeft: 25,
-    borderColor: '#2986cc',
-    borderWidth: 1,
-    borderRadius: 25,
+    height: 50,
+    marginVertical: 10,
+    marginHorizontal: 20,
     paddingLeft: 15,
     backgroundColor: '#fff',
+    borderRadius: 25,
+    shadowColor: '#ccc',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   bookList: {
     padding: 10,
   },
   bookItem: {
     flexDirection: 'row',
-    marginBottom: 15,
     backgroundColor: '#fff',
-    padding: 10,
+    marginVertical: 8,
+    padding: 15,
     borderRadius: 10,
-    elevation: 2,
+    shadowColor: '#aaa',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 3,
   },
   bookImage: {
     width: 60,
     height: 80,
+    borderRadius: 8,
     marginRight: 15,
   },
   bookInfo: {
@@ -161,11 +176,11 @@ const styles = StyleSheet.create({
   bookTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
+    color: '#333',
   },
   bookAuthor: {
     fontSize: 14,
-    marginBottom: 5,
+    color: '#555',
   },
   bookStatus: {
     fontSize: 14,

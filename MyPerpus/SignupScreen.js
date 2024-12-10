@@ -3,30 +3,52 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './FirebaseConfig';
 
-// Fungsi validasi input untuk sign up
-const validateSignUpFields = (username, email, password, confirmPassword, role) => {
-  return username && email && password && confirmPassword && role;
-};
+// Pure Function: Validasi input
+const validateSignUpFields = (username, email, password, confirmPassword, role) => 
+  username && email && password && confirmPassword && role;
 
-// Fungsi validasi password
-const arePasswordsEqual = (password, confirmPassword) => {
-  return password === confirmPassword;
-};
+// Pure Function: Validasi kecocokan password
+const arePasswordsEqual = (password, confirmPassword) => password === confirmPassword;
 
-// Fungsi untuk menampilkan alert
-const showAlert = (title, message) => {
-  Alert.alert(title, message);
-};
+// Pure Function: Menampilkan alert
+const showAlert = (title, message) => Alert.alert(title, message);
+
+  // penjelasan pure function
+  // Tidak memiliki efek samping (side effects):
+  // Fungsi tidak memodifikasi variabel atau data di luar cakupannya.
+  // Semua operasi hanya terjadi di dalam fungsi tersebut.
+  
+  // Deterministik:
+  // Fungsi selalu mengembalikan nilai yang sama untuk input yang sama.
+  // Tidak bergantung pada nilai global atau data eksternal yang bisa berubah.
+  
+  // Tidak bergantung pada state eksternal:
+  // Semua data yang diperlukan fungsi diterima melalui parameter.
+  
+  // Tidak mengubah input:
+  // Input yang diberikan ke fungsi tidak dimodifikasi.
 
 const SignUpScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    role: '',
+  });
 
-  // Fungsi untuk menangani logika Sign Up
+  // High Order Function: Mengupdate state form secara immutability
+  const handleInputChange = (field) => (value) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [field]: value,
+    }));  
+  };
+
+  // High Order Function: Menangani logika Sign Up
   const handleSignUp = async () => {
+    const { email, username, password, confirmPassword, role } = formData;
+
     if (!validateSignUpFields(username, email, password, confirmPassword, role)) {
       showAlert('Error', 'Semua field harus diisi!');
       return;
@@ -58,46 +80,46 @@ const SignUpScreen = ({ navigation }) => {
         style={styles.input}
         placeholder="Email"
         keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
+        value={formData.email}
+        onChangeText={handleInputChange('email')}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        value={formData.username}
+        onChangeText={handleInputChange('username')}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
-        value={password}
-        onChangeText={setPassword}
+        value={formData.password}
+        onChangeText={handleInputChange('password')}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
         secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
+        value={formData.confirmPassword}
+        onChangeText={handleInputChange('confirmPassword')}
       />
 
       <View style={styles.roleContainer}>
         <TouchableOpacity
           style={styles.radioButton}
-          onPress={() => setRole('admin')}
+          onPress={() => handleInputChange('role')('admin')}
         >
-          <View style={[styles.radioCircle, role === 'admin' && styles.radioSelected]} />
+          <View style={[styles.radioCircle, formData.role === 'admin' && styles.radioSelected]} />
           <Text style={styles.radioText}>Admin</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.radioButton}
-          onPress={() => setRole('customer')}
+          onPress={() => handleInputChange('role')('customer')}
         >
-          <View style={[styles.radioCircle, role === 'customer' && styles.radioSelected]} />
+          <View style={[styles.radioCircle, formData.role === 'customer' && styles.radioSelected]} />
           <Text style={styles.radioText}>Customer</Text>
         </TouchableOpacity>
       </View>
@@ -117,29 +139,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#eaf4fc',
+    paddingHorizontal: 20,
   },
   header: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#2986cc',
     marginBottom: 40,
   },
   input: {
-    width: '80%',
+    width: '90%',
     height: 50,
-    borderColor: '#2986cc',
-    borderWidth: 2,
+    borderColor: '#ccc',
+    borderWidth: 1.5,
     borderRadius: 10,
     paddingLeft: 15,
-    marginBottom: 15,
+    marginVertical: 10,
     backgroundColor: '#fff',
+    shadowColor: '#ccc',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    elevation: 3,
   },
   roleContainer: {
     flexDirection: 'row',
-    marginVertical: 20,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 20,
   },
   radioButton: {
     flexDirection: 'row',
@@ -152,32 +179,41 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#2986cc',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 5,
   },
   radioSelected: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
     backgroundColor: '#2986cc',
   },
   radioText: {
-    fontSize: 16,
-    color: '#2986cc',
+    fontSize: 18,
+    color: '#333',
   },
   button: {
-    width: '80%',
+    width: '90%',
     height: 50,
     backgroundColor: '#2986cc',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 12,
+    marginVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    elevation: 5,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+  },
+  footer: {
+    fontSize: 16,
+    color: '#2986cc',
+    marginTop: 20,
+  },
+  signInText: {
+    fontWeight: 'bold',
+    color: '#2986cc',
   },
 });
 
