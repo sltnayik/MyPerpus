@@ -1,8 +1,115 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, Modal, TextInput } from 'react-native';
+import { getAuth, updatePassword, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import Footer from './Footer';
 
-// Fungsi untuk membuat komponen informasi profil
+const ProfileScreen = ({ navigation }) => {
+  const [profileData, setProfileData] = useState({
+    username: '',
+    email: '',
+    profileImage: 'https://via.placeholder.com/150',
+  });
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const auth = getAuth();
+  const db = getFirestore();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setProfileData({
+              username: userData.username || 'Unknown User',
+              email: user.email || 'Email not available',
+              profileImage: userData.profileImage || 'https://via.placeholder.com/150',
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        navigation.replace('Login');
+      }
+    });
+
+    return unsubscribe;
+  }, [auth, db, navigation]);
+
+  const handleLogout = () => {
+    auth.signOut()
+      .then(() => navigation.replace('Login'))
+      .catch((error) => Alert.alert('Error', error.message));
+  };
+
+  const handleChangePassword = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await updatePassword(user, newPassword);
+        Alert.alert('Sukses', 'Password berhasil diperbarui.');
+        setModalVisible(false);
+      } catch (error) {
+        Alert.alert('Error', error.message);
+      }
+    } else {
+      Alert.alert('Error', 'Pengguna tidak ditemukan.');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.profileHeader}>
+        <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
+        <Text style={styles.usernameText}>{profileData.username}</Text>
+      </View>
+
+      <ProfileInfo title="Email" value={profileData.email} />
+      <ProfileInfo title="Username" value={profileData.username} />
+
+      {/* Tombol Ganti Password */}
+      <TouchableOpacity style={styles.changePasswordButton} onPress={() => setModalVisible(true)}>
+        <Text style={styles.changePasswordButtonText}>Ganti Password</Text>
+      </TouchableOpacity>
+
+      <LogoutButton onLogout={handleLogout} />
+      <Footer navigation={navigation} currentScreen="Profile" />
+
+      {/* Modal untuk Ganti Password */}
+      <Modal visible={modalVisible} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Ganti Password</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Masukkan password baru"
+              secureTextEntry={true}
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalButton} onPress={handleChangePassword}>
+                <Text style={styles.modalButtonText}>Simpan</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Batal</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
 const ProfileInfo = ({ title, value }) => (
   <View style={styles.infoContainer}>
     <Text style={styles.infoTitle}>{title}</Text>
@@ -10,47 +117,13 @@ const ProfileInfo = ({ title, value }) => (
   </View>
 );
 
-// Fungsi untuk membuat tombol logout
 const LogoutButton = ({ onLogout }) => (
   <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
     <Text style={styles.logoutButtonText}>Logout</Text>
   </TouchableOpacity>
 );
 
-// Pure function untuk menangani logout
-const handleLogout = (navigation) => {
-  navigation.replace('Login');
-};
-
-// Komponen utama ProfileScreen
-const ProfileScreen = ({ navigation }) => {
-  const profileData = {
-    username: 'User123',
-    email: 'user@example.com',
-    profileImage: 'https://via.placeholder.com/150',
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Header Profil */}
-      <View style={styles.profileHeader}>
-        <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
-        <Text style={styles.usernameText}>{profileData.username}</Text>
-      </View>
-
-      {/* Informasi Profil */}
-      <ProfileInfo title="Email" value={profileData.email} />
-      <ProfileInfo title="Username" value={profileData.username} />
-
-      {/* Tombol Logout */}
-      <LogoutButton onLogout={() => handleLogout(navigation)} />
-
-      {/* Footer */}
-      <Footer navigation={navigation} currentScreen="Profile" />
-    </View>
-  );
-};
-
+// Gaya CSS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -103,6 +176,24 @@ const styles = StyleSheet.create({
     color: '#222',
     marginTop: 5,
   },
+  changePasswordButton: {
+    backgroundColor: '#4caf50',
+    marginHorizontal: 50,
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  changePasswordButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
   logoutButton: {
     backgroundColor: '#ff5252',
     marginHorizontal: 50,
@@ -120,6 +211,49 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  modalContainer: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.5)' 
+  },
+  modalContent: { 
+    backgroundColor: '#fff', 
+    padding: 20, 
+    borderRadius: 10, 
+    width: '80%' 
+  },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    marginBottom: 10 
+  },
+  textInput: { 
+    borderWidth: 1, 
+    borderColor: '#ccc', 
+    padding: 10, 
+    borderRadius: 5, 
+    marginBottom: 15 
+  },
+  modalButtons: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between' 
+  },
+  modalButton: { 
+    backgroundColor: '#4caf50', 
+    padding: 10, 
+    borderRadius: 5, 
+    marginHorizontal: 5, 
+    flex: 1, 
+    alignItems: 'center' 
+  },
+  modalButtonText: { 
+    color: '#fff', 
+    fontWeight: 'bold' 
+  },
+  cancelButton: { 
+    backgroundColor: '#ff5252' 
   },
 });
 
