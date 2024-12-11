@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { db } from './FirebaseConfig';
+import { db } from '../FirebaseConfig';
 import Footer from './Footer';
 
 // Komponen untuk menampilkan item buku

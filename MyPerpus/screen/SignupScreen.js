@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from './FirebaseConfig';
+import { auth } from '../FirebaseConfig';
 
 // Pure Function: Validasi input
 const validateSignUpFields = (username, email, password, confirmPassword, role) => 
