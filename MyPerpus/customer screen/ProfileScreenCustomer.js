@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, Modal, TextInput } from 'react-native';
 import { getAuth, updatePassword, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import Footer from './Footer';
+import Footer from './FooterCustomer';
 
 const ProfileScreen = ({ navigation }) => {
   const [profileData, setProfileData] = useState({
@@ -78,7 +78,7 @@ const ProfileScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       <LogoutButton onLogout={handleLogout} />
-      <Footer navigation={navigation} currentScreen="Profile" />
+      <Footer navigation={navigation} currentScreen="Profile Customer" />
 
       {/* Modal untuk Ganti Password */}
       <Modal visible={modalVisible} transparent={true} animationType="slide">

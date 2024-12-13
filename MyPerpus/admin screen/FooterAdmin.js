@@ -14,25 +14,25 @@ const Footer = ({ navigation, currentScreen }) => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => navigation.navigate('Pinjaman')}
+        onPress={() => navigation.navigate('Pinjaman Admin')}
       >
-        <Text style={[styles.navButtonText, currentScreen === 'Pinjaman' && styles.activeNavButton]}>
+        <Text style={[styles.navButtonText, currentScreen === 'Pinjaman Admin' && styles.activeNavButton]}>
           Pinjaman
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => navigation.navigate('Home')}
+        onPress={() => navigation.navigate('Home Admin')}
       >
-        <Text style={[styles.navButtonText, currentScreen === 'Home' && styles.activeNavButton]}>
+        <Text style={[styles.navButtonText, currentScreen === 'Home Admin' && styles.activeNavButton]}>
           Home
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.navButton}
-        onPress={() => navigation.navigate('Profile')}
+        onPress={() => navigation.navigate('Profile Admin')}
       >
-        <Text style={[styles.navButtonText, currentScreen === 'Profile' && styles.activeNavButton]}>
+        <Text style={[styles.navButtonText, currentScreen === 'Profile Admin' && styles.activeNavButton]}>
           Profil
         </Text>
       </TouchableOpacity>

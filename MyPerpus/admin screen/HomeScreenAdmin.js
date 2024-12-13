@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { getFirestore, collection, doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import Footer from './Footer';
+import Footer from './FooterAdmin';
 
 // Komponen untuk Render Buku
 const BookItem = ({ item, onPinjamPress }) => (
@@ -114,7 +114,7 @@ const HomeScreen = ({ navigation }) => {
       />
 
       {/* Footer */}
-      <Footer navigation={navigation} currentScreen="Home" />
+      <Footer navigation={navigation} currentScreen="Home Admin" />
     </View>
   );
 };

@@ -1,25 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import Footer from './Footer'; // Import Footer
+import Footer from './FooterAdmin'; // Import Footer
 
-// Fungsi untuk membuat item buku
-const BookItem = ({ book }) => (
+// Fungsi untuk membuat item buku dengan tombol kembalikan
+const BookItem = ({ book, onReturn }) => (
   <View style={styles.bookItem}>
     <Image source={{ uri: book.cover || 'https://via.placeholder.com/100' }} style={styles.bookCover} />
     <View style={styles.bookInfo}>
       <Text style={styles.bookTitle}>{book.judul}</Text>
       <Text style={styles.bookAuthor}>{book.pengarang}</Text>
     </View>
+    {onReturn && (
+      <TouchableOpacity
+        style={styles.returnButton}
+        onPress={() => onReturn(book)}
+      >
+        <Text style={styles.returnButtonText}>Kembalikan</Text>
+      </TouchableOpacity>
+    )}
   </View>
 );
 
 // Fungsi untuk membuat daftar buku
-const BookList = ({ books }) => (
+const BookList = ({ books, onReturn }) => (
   <FlatList
     data={books}
-    renderItem={({ item }) => <BookItem book={item} />}
+    renderItem={({ item }) => <BookItem book={item} onReturn={onReturn} />}
     keyExtractor={(item) => item.id}
     contentContainerStyle={styles.bookListContainer}
   />
@@ -74,6 +82,19 @@ const PinjamanScreen = ({ navigation }) => {
     };
   }, [user]);
 
+  // Fungsi untuk mengembalikan buku
+  const handleReturnBook = async (book) => {
+    const db = getFirestore();
+    const bookRef = doc(db, 'buku', book.id);
+
+    try {
+      await updateDoc(bookRef, { status: true, uid: '' });
+      Alert.alert('Berhasil', `Buku "${book.judul}" telah dikembalikan.`);
+    } catch (error) {
+      Alert.alert('Gagal', 'Terjadi kesalahan saat mengembalikan buku.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -84,13 +105,13 @@ const PinjamanScreen = ({ navigation }) => {
 
       {/* Header Keterangan */}
       <Text style={styles.keteranganText}>Pinjaman anda</Text>
-      <BookList books={borrowedByUser} />
+      <BookList books={borrowedByUser} onReturn={handleReturnBook} />
 
       <Text style={styles.keteranganText}>Buku dalam pinjaman</Text>
       <BookList books={borrowedByOthers} />
 
       {/* Footer */}
-      <Footer navigation={navigation} currentScreen="Pinjaman" />
+      <Footer navigation={navigation} currentScreen="Pinjaman Customer" />
     </View>
   );
 };
@@ -167,6 +188,18 @@ const styles = StyleSheet.create({
   bookAuthor: {
     fontSize: 14,
     color: '#666',
+  },
+  returnButton: {
+    alignSelf: 'center',
+    backgroundColor: '#2986cc',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  returnButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 

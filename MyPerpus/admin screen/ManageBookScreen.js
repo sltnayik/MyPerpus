@@ -3,7 +3,7 @@ import { View, Text, TextInput, FlatList, Image, TouchableOpacity, StyleSheet, A
 import { collection, onSnapshot, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../FirebaseConfig';
-import Footer from './Footer';
+import Footer from './FooterAdmin';
 
 // Komponen untuk menampilkan item buku
 const RenderBookItem = ({ item, onDelete }) => (

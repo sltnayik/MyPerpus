@@ -63,8 +63,11 @@ const LoginScreen = ({ navigation }) => {
       const alertMessage = createAlertMessage('success', user.email, role);
       showAlert(alertMessage);
 
-      // Navigasi ke halaman berikutnya
-      navigation.navigate('Home');
+      if (role === 'admin') {
+        navigation.navigate('Home Admin'); // Ganti dengan nama screen untuk Admin
+      } else if (role === 'customer') {
+        navigation.navigate('Home Customer'); // Ganti dengan nama screen untuk Customer
+      }
     } catch (error) {
       const alertMessage = createAlertMessage('error');
       showAlert(alertMessage);
