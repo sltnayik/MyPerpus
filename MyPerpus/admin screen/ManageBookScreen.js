@@ -5,8 +5,8 @@ import { getAuth } from 'firebase/auth';
 import { db } from '../FirebaseConfig';
 import Footer from './FooterAdmin';
 
-// Komponen untuk menampilkan item buku
-const RenderBookItem = ({ item, onDelete }) => (
+// Pure function untuk membuat item buku
+const RenderBookItem = React.memo(({ item, onDelete }) => (
   <View style={styles.bookItem}>
     {item.image && (
       <Image source={{ uri: item.image }} style={styles.bookImage} />
@@ -23,64 +23,65 @@ const RenderBookItem = ({ item, onDelete }) => (
       <Text style={styles.deleteButton}>Hapus</Text>
     </TouchableOpacity>
   </View>
-);
+));
 
 const ManageBooksScreen = ({ navigation }) => {
   const [books, setBooks] = useState([]);
   const [newTitle, setNewTitle] = useState('');
   const [newAuthor, setNewAuthor] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
   const booksCollection = collection(db, 'buku');
 
-  // Mengambil data buku secara real-time dari Firestore
+  // Pure function untuk memetakan dokumen snapshot menjadi data buku
+  const mapSnapshotToBooks = (snapshot) =>
+    snapshot.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+    }));
+
+  // Mendapatkan data buku secara real-time
   useEffect(() => {
-    const unsubscribe = onSnapshot(booksCollection, snapshot => {
-      try {
-        const fetchedBooks = snapshot.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id,
-        }));
-        setBooks(fetchedBooks);
-      } catch (error) {
-        console.log('Firestore Error:', error);
-      }
+    const unsubscribe = onSnapshot(booksCollection, (snapshot) => {
+      setBooks(mapSnapshotToBooks(snapshot));
     });
 
-    return () => unsubscribe(); // Membersihkan listener saat komponen unmount
+    return () => unsubscribe();
   }, []);
 
-  // Menambah buku ke Firestore
+  // Menambah buku dengan data immutable
   const addBuku = async () => {
-    if (newTitle && newAuthor) {
-      try {
-        const user = getAuth().currentUser;
-        const uid = user ? user.uid : null;
+    if (!newTitle || !newAuthor) {
+      return Alert.alert('Input Error', 'Harap isi semua bidang');
+    }
 
-        if (uid) {
-          await addDoc(booksCollection, {
-            uid,
-            judul: newTitle,
-            pengarang: newAuthor,
-            status: true,
-            created_at: Timestamp.now(),
-            updated_at: Timestamp.now(),
-          });
-          Alert.alert('Sukses', 'Buku berhasil ditambahkan');
-          setNewTitle('');
-          setNewAuthor('');
-        } else {
-          Alert.alert('Error', 'Pengguna tidak ditemukan, silakan login terlebih dahulu');
-        }
-      } catch (error) {
-        console.error('Failed to add book:', error);
-        Alert.alert('Gagal', 'Tidak dapat menambah buku');
+    try {
+      const user = getAuth().currentUser;
+      const uid = user ? user.uid : null;
+
+      if (!uid) {
+        return Alert.alert('Error', 'Pengguna tidak ditemukan, silakan login terlebih dahulu');
       }
-    } else {
-      Alert.alert('Input Error', 'Harap isi semua bidang');
+
+      await addDoc(booksCollection, {
+        uid,
+        judul: newTitle,
+        pengarang: newAuthor,
+        status: true,
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
+      });
+
+      Alert.alert('Sukses', 'Buku berhasil ditambahkan');
+      setNewTitle('');
+      setNewAuthor('');
+    } catch (error) {
+      console.error('Failed to add book:', error);
+      Alert.alert('Gagal', 'Tidak dapat menambah buku');
     }
   };
 
-  // Menghapus buku dari Firestore
+  // Menghapus buku dengan ID tertentu
   const deleteBook = async (id) => {
     try {
       await deleteDoc(doc(db, 'buku', id));
@@ -91,11 +92,15 @@ const ManageBooksScreen = ({ navigation }) => {
     }
   };
 
-  // Filter buku berdasarkan pencarian
-  const filteredBooks = books.filter((book) =>
-    book.judul?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    book.pengarang?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter buku menggunakan fungsi murni
+  const filterBooks = (books, query) =>
+    books.filter(
+      (book) =>
+        book.judul?.toLowerCase().includes(query.toLowerCase()) ||
+        book.pengarang?.toLowerCase().includes(query.toLowerCase())
+    );
+
+  const filteredBooks = filterBooks(books, searchQuery);
 
   return (
     <View style={styles.container}>
@@ -108,7 +113,7 @@ const ManageBooksScreen = ({ navigation }) => {
         style={styles.searchBar}
         placeholder="Cari buku"
         value={searchQuery}
-        onChangeText={setSearchQuery}
+        onChangeText={(query) => setSearchQuery(query)}
       />
 
       {/* Daftar Buku */}
@@ -127,13 +132,13 @@ const ManageBooksScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="Judul buku"
           value={newTitle}
-          onChangeText={setNewTitle}
+          onChangeText={(text) => setNewTitle(text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Nama penulis"
           value={newAuthor}
-          onChangeText={setNewAuthor}
+          onChangeText={(text) => setNewAuthor(text)}
         />
         <TouchableOpacity onPress={addBuku} style={styles.addButton}>
           <Text style={styles.addText}>Tambah Buku</Text>
@@ -144,6 +149,7 @@ const ManageBooksScreen = ({ navigation }) => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

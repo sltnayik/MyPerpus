@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 import Footer from './FooterAdmin';
 
 // Komponen untuk Render Buku
-const BookItem = ({ item, onPinjamPress }) => (
+const BookItem = React.memo(({ item, onPinjamPress }) => (
   <View style={styles.bookItem}>
     <Image
       source={{ uri: item.image || 'https://via.placeholder.com/100' }}
@@ -20,72 +20,69 @@ const BookItem = ({ item, onPinjamPress }) => (
 
       {/* Tombol Pinjam */}
       {item.status && (
-        <TouchableOpacity style={styles.pinjamButton} onPress={() => onPinjamPress(item.id)}>
+        <TouchableOpacity
+          style={styles.pinjamButton}
+          onPress={() => onPinjamPress(item.id)}
+        >
           <Text style={{ color: 'white' }}>Pinjam</Text>
         </TouchableOpacity>
       )}
     </View>
   </View>
-);
+));
 
-// Fungsi untuk Filter Buku
-const filterBooks = (books, query) => {
-  if (!query) return books; // Jika query kosong, kembalikan semua buku
-  return books.filter((book) => {
-    const title = book.judul ? book.judul.toLowerCase() : '';
-    const author = book.pengarang ? book.pengarang.toLowerCase() : '';
-    const status = book.status ? book.status.toLowerCase() : '';
-    return (
-      title.includes(query.toLowerCase()) ||
-      author.includes(query.toLowerCase()) ||
-      status.includes(query.toLowerCase())
-    );
-  });
-};
+// Pure function untuk Filter Buku
+// fungsi murni karena mereka tidak memiliki efek samping dan hanya bergantung pada input untuk menghasilkan output.
+const filterBooks = (books, query) =>
+  query
+    ? books.filter((book) =>
+        [book.judul, book.pengarang, book.status ? 'tersedia' : 'dipinjam']
+          .filter(Boolean)
+          .some((field) => field.toLowerCase().includes(query.toLowerCase()))
+      )
+    : books;
 
 const HomeScreen = ({ navigation }) => {
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const auth = getAuth(); // Mengambil instance auth Firebase
-  const db = getFirestore(); // Mengambil instance Firestore
-  const filteredBooks = filterBooks(books, searchQuery);
+  const auth = getAuth();
+  const db = getFirestore();
 
-  // Mengambil Data Buku dari Firestore secara Real-time
+  // Fungsi Murni untuk Memproses Buku
+  const processBooks = (snapshot) =>
+    snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+  // Mengambil Data Buku dari Firestore
   useEffect(() => {
     const booksCollection = collection(db, 'buku');
-    const unsubscribe = onSnapshot(booksCollection, (snapshot) => {
-      const fetchedBooks = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setBooks(fetchedBooks);
-    });
-
-    // Membersihkan listener saat komponen di-unmount
-    return () => unsubscribe();
-  }, []);
+    const unsubscribe = onSnapshot(booksCollection, (snapshot) =>
+      setBooks(processBooks(snapshot))
+    );
+    return unsubscribe;
+  }, [db]);
 
   // Fungsi untuk meminjam buku
   const handlePinjam = async (bookId) => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('Pengguna tidak login. Harap login terlebih dahulu.');
+      navigation.navigate('Login');
+      return;
+    }
+
     try {
-      const user = auth.currentUser;
-
-      if (user) {
-        const bookRef = doc(db, 'buku', bookId);
-        await updateDoc(bookRef, {
-          status: false,
-          uid: user.uid,  // Menyimpan ID user yang meminjam buku
-        });
-
-        console.log('Buku berhasil dipinjam!');
-      } else {
-        console.log('Pengguna tidak login. Harap login terlebih dahulu.');
-        navigation.navigate('Login'); // Mengarahkan ke halaman login
-      }
+      const bookRef = doc(db, 'buku', bookId);
+      await updateDoc(bookRef, { status: false, uid: user.uid });
+      console.log('Buku berhasil dipinjam!');
     } catch (error) {
       console.error('Gagal meminjam buku:', error.message);
     }
   };
+
+  const filteredBooks = filterBooks(books, searchQuery);
 
   return (
     <View style={styles.container}>
@@ -183,9 +180,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: 'center',
     borderRadius: 5,
-  },
-  bookStatus: {
-    color: 'green',
   },
   bookImage: {
     width: 60,

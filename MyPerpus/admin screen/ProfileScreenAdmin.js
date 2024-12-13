@@ -1,34 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, Modal, TextInput } from 'react-native';
 import { getAuth, updatePassword, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import Footer from './FooterAdmin';
 
 const ProfileScreen = ({ navigation }) => {
-  const [profileData, setProfileData] = useState({
-    username: '',
-    email: '',
-    profileImage: 'https://via.placeholder.com/150',
-  });
-  const [modalVisible, setModalVisible] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
   const auth = getAuth();
   const db = getFirestore();
 
+  const [profileData, setProfileData] = useState(initializeProfile());
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, handleAuthChange);
+    return unsubscribe;
+  }, [auth, db, handleAuthChange]);
+
+  // ** Pure Function **: Mengembalikan data profil default tanpa efek samping
+  function initializeProfile() {
+    return {
+      username: '',
+      email: '',
+      profileImage: 'https://via.placeholder.com/150',
+    };
+  }
+
+  // ** Pure Function **: Membuat objek profil baru secara immutable
+  const createProfile = (userData, user) => ({
+    username: userData?.username || 'Unknown User',
+    email: user?.email || 'Email not available',
+    profileImage: userData?.profileImage || 'https://via.placeholder.com/150',
+  });
+
+  // ** Callback untuk Immutability **: Menangani perubahan status autentikasi
+  const handleAuthChange = useCallback(
+    async (user) => {
       if (user) {
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
 
           if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfileData({
-              username: userData.username || 'Unknown User',
-              email: user.email || 'Email not available',
-              profileImage: userData.profileImage || 'https://via.placeholder.com/150',
-            });
+            const updatedProfile = createProfile(userDoc.data(), user);
+            setProfileData(updatedProfile);
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
@@ -36,18 +51,19 @@ const ProfileScreen = ({ navigation }) => {
       } else {
         navigation.replace('Login');
       }
-    });
+    },
+    [db, navigation]
+  );
 
-    return unsubscribe;
-  }, [auth, db, navigation]);
-
-  const handleLogout = () => {
+  // ** Pure Function **: Menangani logout tanpa mengubah state secara langsung
+  const handleLogout = useCallback(() => {
     auth.signOut()
       .then(() => navigation.replace('Login'))
       .catch((error) => Alert.alert('Error', error.message));
-  };
+  }, [auth, navigation]);
 
-  const handleChangePassword = async () => {
+  // ** Pure Function **: Menangani perubahan password secara async
+  const handleChangePassword = useCallback(async () => {
     const user = auth.currentUser;
     if (user) {
       try {
@@ -60,19 +76,14 @@ const ProfileScreen = ({ navigation }) => {
     } else {
       Alert.alert('Error', 'Pengguna tidak ditemukan.');
     }
-  };
+  }, [auth, newPassword]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileHeader}>
-        <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
-        <Text style={styles.usernameText}>{profileData.username}</Text>
-      </View>
-
+      <ProfileHeader profileData={profileData} />
       <ProfileInfo title="Email" value={profileData.email} />
       <ProfileInfo title="Username" value={profileData.username} />
 
-      {/* Tombol Ganti Password */}
       <TouchableOpacity style={styles.changePasswordButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.changePasswordButtonText}>Ganti Password</Text>
       </TouchableOpacity>
@@ -80,35 +91,23 @@ const ProfileScreen = ({ navigation }) => {
       <LogoutButton onLogout={handleLogout} />
       <Footer navigation={navigation} currentScreen="Profile Admin" />
 
-      {/* Modal untuk Ganti Password */}
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Ganti Password</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Masukkan password baru"
-              secureTextEntry={true}
-              value={newPassword}
-              onChangeText={setNewPassword}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={handleChangePassword}>
-                <Text style={styles.modalButtonText}>Simpan</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Batal</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <PasswordModal
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        newPassword={newPassword}
+        setNewPassword={setNewPassword}
+        handleChangePassword={handleChangePassword}
+      />
     </View>
   );
 };
+
+const ProfileHeader = ({ profileData }) => (
+  <View style={styles.profileHeader}>
+    <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
+    <Text style={styles.usernameText}>{profileData.username}</Text>
+  </View>
+);
 
 const ProfileInfo = ({ title, value }) => (
   <View style={styles.infoContainer}>
@@ -121,6 +120,34 @@ const LogoutButton = ({ onLogout }) => (
   <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
     <Text style={styles.logoutButtonText}>Logout</Text>
   </TouchableOpacity>
+);
+
+const PasswordModal = ({ modalVisible, setModalVisible, newPassword, setNewPassword, handleChangePassword }) => (
+  <Modal visible={modalVisible} transparent={true} animationType="slide">
+    <View style={styles.modalContainer}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>Ganti Password</Text>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Masukkan password baru"
+          secureTextEntry={true}
+          value={newPassword}
+          onChangeText={setNewPassword}
+        />
+        <View style={styles.modalButtons}>
+          <TouchableOpacity style={styles.modalButton} onPress={handleChangePassword}>
+            <Text style={styles.modalButtonText}>Simpan</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modalButton, styles.cancelButton]}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.modalButtonText}>Batal</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>
 );
 
 const styles = StyleSheet.create({

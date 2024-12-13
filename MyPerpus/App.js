@@ -65,3 +65,8 @@ export default function App() {
     </NavigationContainer>
   );
 }
+
+// options={{
+//   title: 'Kelola Buku',
+//   headerLeft: () => null, // Menghilangkan tombol panah kiri
+// }}

@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import Footer from './FooterCustomer'; // Import Footer
+import Footer from './FooterCustomer';
+
+// Pure function untuk memproses data buku
+const processBooksData = (snapshot) =>
+  snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
 // Fungsi untuk membuat item buku dengan tombol kembalikan
-const BookItem = ({ book, onReturn }) => (
+const BookItem = React.memo(({ book, onReturn }) => (
   <View style={styles.bookItem}>
     <Image source={{ uri: book.cover || 'https://via.placeholder.com/100' }} style={styles.bookCover} />
     <View style={styles.bookInfo}>
@@ -13,25 +20,22 @@ const BookItem = ({ book, onReturn }) => (
       <Text style={styles.bookAuthor}>{book.pengarang}</Text>
     </View>
     {onReturn && (
-      <TouchableOpacity
-        style={styles.returnButton}
-        onPress={() => onReturn(book)}
-      >
+      <TouchableOpacity style={styles.returnButton} onPress={() => onReturn(book)}>
         <Text style={styles.returnButtonText}>Kembalikan</Text>
       </TouchableOpacity>
     )}
   </View>
-);
+));
 
-// Fungsi untuk membuat daftar buku
-const BookList = ({ books, onReturn }) => (
+// Pure function untuk membuat daftar buku
+const BookList = React.memo(({ books, onReturn }) => (
   <FlatList
     data={books}
     renderItem={({ item }) => <BookItem book={item} onReturn={onReturn} />}
     keyExtractor={(item) => item.id}
     contentContainerStyle={styles.bookListContainer}
   />
-);
+));
 
 // Komponen utama PinjamanScreen
 const PinjamanScreen = ({ navigation }) => {
@@ -49,31 +53,23 @@ const PinjamanScreen = ({ navigation }) => {
     // Query buku yang dipinjam oleh user saat ini
     const userBooksQuery = query(
       booksCollection,
-      where('status', '==', false), // Buku dipinjam
-      where('uid', '==', user.uid) // Oleh user yang login
+      where('status', '==', false),
+      where('uid', '==', user.uid)
     );
 
     // Query buku yang dipinjam oleh user lain
     const otherBooksQuery = query(
       booksCollection,
-      where('status', '==', false), // Buku dipinjam
-      where('uid', '!=', user.uid) // Oleh user lain
+      where('status', '==', false),
+      where('uid', '!=', user.uid)
     );
 
     const unsubscribeUserBooks = onSnapshot(userBooksQuery, (snapshot) => {
-      const fetchedBooks = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setBorrowedByUser(fetchedBooks);
+      setBorrowedByUser(processBooksData(snapshot)); // Tidak langsung dimutasi
     });
 
     const unsubscribeOtherBooks = onSnapshot(otherBooksQuery, (snapshot) => {
-      const fetchedBooks = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setBorrowedByOthers(fetchedBooks);
+      setBorrowedByOthers(processBooksData(snapshot));
     });
 
     return () => {
@@ -82,7 +78,7 @@ const PinjamanScreen = ({ navigation }) => {
     };
   }, [user]);
 
-  // Fungsi untuk mengembalikan buku
+  // Pure function untuk mengembalikan buku
   const handleReturnBook = async (book) => {
     const db = getFirestore();
     const bookRef = doc(db, 'buku', book.id);
