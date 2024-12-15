@@ -22,44 +22,53 @@ export default function App() {
           name="Splash" 
           component={SplashScreen} 
           options={{ headerShown: false }}
-        />
+          />
         {/* Admin */}
         <Stack.Screen 
           name="Login" 
           component={LoginScreen} 
+          options={{ headerShown: false }}
         />
         <Stack.Screen 
           name="SignUp" 
           component={SignUpScreen} 
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Home Admin"
           component={HomeScreenAdmin}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Profile Admin"
           component={ProfileScreenAdmin}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Pinjaman Admin"
           component={PinjamanScreenAdmin}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="ManageBooks"
           component={ManageBooksScreen}
+          options={{ headerShown: false }}
         />
         {/* Customer */}
         <Stack.Screen
           name="Home Customer"
           component={HomeScreenCustomer}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Profile Customer"
           component={ProfileScreenCustomer}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Pinjaman Customer"
           component={PinjamanScreenCustomer}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

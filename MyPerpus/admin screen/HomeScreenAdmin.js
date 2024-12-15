@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 10,
     elevation: 5,
+    marginTop: 60
   },
   logo: {
     width: 60,

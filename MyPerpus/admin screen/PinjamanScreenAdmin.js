@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#eaf4fc',
     paddingBottom: 60, // Ruang untuk footer
+    // marginTop: 50
   },
   header: {
     height: 80,
@@ -132,6 +133,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 10,
     elevation: 5,
+    marginTop: 60
   },
   logo: {
     width: 60,
